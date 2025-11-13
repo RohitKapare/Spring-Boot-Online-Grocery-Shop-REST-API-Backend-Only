@@ -3,7 +3,6 @@ package com.rohit.grocery.groceryapi.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import com.rohit.grocery.groceryapi.model.Customer;
@@ -23,7 +22,10 @@ public class CustomerServiceImpl implements CustomerService {
   }
 
   @Override
-  public Customer getCustomerById(@NonNull Long id) {
+  public Customer getCustomerById(Long id) {
+    if (id == null) {
+      throw new IllegalArgumentException("Customer ID cannot be null");
+    }
     return customerRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + id));
   }

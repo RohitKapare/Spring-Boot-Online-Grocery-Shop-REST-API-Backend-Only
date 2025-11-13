@@ -32,7 +32,7 @@ public class Item {
   private String category;
   
   @Column(nullable = false)
-  private float price;
+  private Float price;
   
   @Column(name = "stock_quantity", nullable = false)
   private int stockQuantity;
