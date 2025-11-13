@@ -17,6 +17,13 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+# Environment and config files
+.env
+application.properties
+application.yml
+application-*.yml
+application-*.properties
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
