@@ -3,11 +3,13 @@ package com.rohit.grocery.groceryapi.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.rohit.grocery.groceryapi.exception.ResourceNotFoundException;
 import com.rohit.grocery.groceryapi.model.Item;
 import com.rohit.grocery.groceryapi.repository.ItemRepository;
 
+@Service
 public class ItemServiceImpl implements ItemService{
 
   @Autowired
