@@ -3,6 +3,8 @@ package com.rohit.grocery.groceryapi.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,5 +40,6 @@ public class Item {
   private int stockQuantity;
   
   @OneToMany(mappedBy = "groceryItem", cascade = CascadeType.ALL)
+  @JsonManagedReference("item-orderItems")
   private List<OrderItem> orderItems = new ArrayList<>();
 }

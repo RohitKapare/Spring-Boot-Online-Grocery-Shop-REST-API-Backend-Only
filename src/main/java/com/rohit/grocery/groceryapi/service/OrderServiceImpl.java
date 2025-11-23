@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.rohit.grocery.groceryapi.dto.OrderRequestDto;
 import com.rohit.grocery.groceryapi.exception.ResourceNotFoundException;
@@ -54,8 +55,10 @@ public class OrderServiceImpl implements OrderService{
     return orderRepository.findByCustomer_Id(id);
   }
 
+  @Transactional
   @Override
   public Order createOrder(OrderRequestDto orderRequestDto) {
+    //Validate inputs
     if (orderRequestDto == null) {
       throw new IllegalArgumentException("Order request cannot be null");
     }
@@ -66,16 +69,20 @@ public class OrderServiceImpl implements OrderService{
       throw new IllegalArgumentException("Order must contain at least one item");
     }
 
+    //Find customer
     Customer customer = customerRepository.findById(orderRequestDto.getCustomerId())
             .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: "
              + orderRequestDto.getCustomerId()));
-
+  
+    // creating order for that customer
     Order order = new Order();
     order.setCustomer(customer);
     order.setOrderDate(LocalDateTime.now());
 
     List<OrderItem> orderItems = new ArrayList<>();
+    List<Item> itemsToUpdate = new ArrayList<>();
     
+    // First pass: Validate all items and check stock availability
     for (OrderRequestDto.OrderItemRequestDto itemRequest : orderRequestDto.getOrderItems()) {
       if (itemRequest.getItemId() == null) {
         throw new IllegalArgumentException("Item ID cannot be null");
@@ -88,14 +95,14 @@ public class OrderServiceImpl implements OrderService{
               .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " 
                 + itemRequest.getItemId()));
 
-      // Check stock availability
+      //Check stock availability
       if (item.getStockQuantity() < itemRequest.getQuantity()) {
         throw new IllegalArgumentException("Insufficient stock for item: " + item.getName() 
           + ". Available: " + item.getStockQuantity() 
           + ", Requested: " + itemRequest.getQuantity());
       }
 
-      // Create order item
+      //Create order item
       OrderItem orderItem = new OrderItem();
       orderItem.setOrder(order);
       orderItem.setGroceryItem(item);
@@ -103,17 +110,24 @@ public class OrderServiceImpl implements OrderService{
       orderItem.setSubtotal(item.getPrice() * itemRequest.getQuantity());
 
       orderItems.add(orderItem);
-
-      // Update stock quantity
+      
+      //Prepare item for stock update (but not saving yet)
       item.setStockQuantity(item.getStockQuantity() - itemRequest.getQuantity());
+      itemsToUpdate.add(item);
+    }
+
+    //Set order items
+    order.setOrderItems(orderItems);
+
+    //Saving order first
+    Order savedOrder = orderRepository.save(order);
+
+    // Update stock quantities only after successful order creation
+    for (Item item : itemsToUpdate) {
       itemRepository.save(item);
     }
 
-    // Set order items
-    order.setOrderItems(orderItems);
-
-    // Save and return order
-    return orderRepository.save(order);
+    return savedOrder;
   }
 
   @Override
